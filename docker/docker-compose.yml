@@ -1,0 +1,9 @@
+version: "3.8"
+
+services:
+  immich-album-sync:
+    image: immich-album-sync
+    container_name: immich-album-sync
+    volumes:
+      - ../appsettings.json:/app/appsettings.json:ro
+    restart: unless-stopped
