@@ -8,7 +8,7 @@ RUN dotnet publish -c Release -o /app
 FROM mcr.microsoft.com/dotnet/runtime-deps:10.0-alpine
 WORKDIR /app
 COPY --from=builder /app .
-COPY appsettings.json /app/
+COPY AlbumSync/appsettings.json /app/appsettings.json
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
