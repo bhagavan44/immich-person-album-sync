@@ -125,7 +125,7 @@ public class ImmichClient(HttpClient http)
             {
                 var id = el.GetProperty("id").GetString()!;
                 string name;
-                if (el.TryGetProperty("name", out var nameProp) && nameProp.ValueKind == JsonValueKind.String)
+                if (el.TryGetProperty("albumName", out var nameProp) && nameProp.ValueKind == JsonValueKind.String)
                 {
                     name = nameProp.GetString()!;
                 }
