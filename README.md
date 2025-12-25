@@ -18,6 +18,7 @@ Automatically sync Immich face-recognition people into albums.
 ## Running the Project
 
 ### Prerequisites
+
 - .NET 10 SDK (for development/building)
 - Docker (for containerized deployment)
 - Immich instance with API access
@@ -25,6 +26,7 @@ Automatically sync Immich face-recognition people into albums.
 ### Configuration
 
 Create or edit `appsettings.json` in the `AlbumSync` folder:
+
 ```json
 {
   "Immich": {
@@ -43,21 +45,25 @@ Create or edit `appsettings.json` in the `AlbumSync` folder:
 ### Option 1: Direct Execution (Windows/Linux)
 
 **Build the project:**
+
 ```bash
 dotnet build
 ```
 
 **Run with default settings:**
+
 ```bash
 dotnet run --project AlbumSync
 ```
 
 **Test with dry-run (preview changes without applying):**
+
 ```bash
 dotnet run --project AlbumSync -- --dry-run
 ```
 
 **List available people and albums:**
+
 ```bash
 dotnet run --project AlbumSync -- --list-all
 dotnet run --project AlbumSync -- --list-people
@@ -67,16 +73,19 @@ dotnet run --project AlbumSync -- --list-albums
 ### Option 2: Docker Deployment
 
 **Build the Docker image:**
+
 ```bash
 docker build -f docker/Dockerfile -t immich-album-sync .
 ```
 
 **Run the container:**
+
 ```bash
 docker compose -f docker/docker-compose.yml up -d
 ```
 
 **View logs:**
+
 ```bash
 docker logs -f immich-album-sync
 ```
@@ -84,6 +93,7 @@ docker logs -f immich-album-sync
 ### Option 3: Self-Contained Executable
 
 **Publish as a single-file executable:**
+
 ```bash
 dotnet publish -c Release -o dist
 ```

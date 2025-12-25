@@ -1,0 +1,70 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "command": "dotnet",
+            "type": "shell",
+            "args": [
+                "build",
+                "AlbumSync/ImmichAlbumSync.csproj"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "build release",
+            "command": "dotnet",
+            "type": "shell",
+            "args": [
+                "build",
+                "-c",
+                "Release",
+                "AlbumSync/ImmichAlbumSync.csproj"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": "build"
+        },
+        {
+            "label": "clean",
+            "command": "dotnet",
+            "type": "shell",
+            "args": [
+                "clean",
+                "AlbumSync/ImmichAlbumSync.csproj"
+            ],
+            "group": "build"
+        },
+        {
+            "label": "rebuild",
+            "command": "dotnet",
+            "type": "shell",
+            "args": [
+                "build",
+                "--no-restore",
+                "AlbumSync/ImmichAlbumSync.csproj"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": "build",
+            "dependsOn": "clean"
+        },
+        {
+            "label": "publish",
+            "command": "dotnet",
+            "type": "shell",
+            "args": [
+                "publish",
+                "-c",
+                "Release",
+                "-o",
+                "dist",
+                "AlbumSync/ImmichAlbumSync.csproj"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": "build"
+        }
+    ]
+}
