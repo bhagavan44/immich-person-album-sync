@@ -65,27 +65,54 @@ public class ImmichClient(HttpClient http)
     // Returns a sequence of (Id, Name) tuples for people
     public async Task<IEnumerable<(string Id, string Name)>> GetPeople()
     {
-        var json = await http.GetStringAsync("/api/people");
-        using var doc = JsonDocument.Parse(json);
-        return doc.RootElement.EnumerateArray()
-            .Select(el =>
-            {
-                var id = el.GetProperty("id").GetString()!;
-                string name;
-                if (el.TryGetProperty("name", out var nameProp) && nameProp.ValueKind == JsonValueKind.String)
-                {
-                    name = nameProp.GetString()!;
-                }
-                else
-                {
-                    var first = el.TryGetProperty("firstName", out var f) && f.ValueKind == JsonValueKind.String ? f.GetString() : null;
-                    var last = el.TryGetProperty("lastName", out var l) && l.ValueKind == JsonValueKind.String ? l.GetString() : null;
-                    name = string.Join(' ', new[] { first, last }.Where(x => !string.IsNullOrWhiteSpace(x)));
-                }
+        var results = new List<(string Id, string Name)>();
+        var page = 0;
+        var hasNextPage = true;
 
-                return (Id: id, Name: name ?? string.Empty);
-            })
-            .ToList();
+        while (hasNextPage)
+        {
+            var url = page == 0 ? "/api/people" : $"/api/people?page={page}";
+            var json = await http.GetStringAsync(url);
+            using var doc = JsonDocument.Parse(json);
+
+            // API returns { "people": [...], "hasNextPage": bool, "total": int, "hidden": int }
+            var peopleArray = doc.RootElement.GetProperty("people");
+
+            var people = peopleArray.EnumerateArray()
+                .Select(el =>
+                {
+                    var id = el.GetProperty("id").GetString()!;
+                    string name;
+                    if (el.TryGetProperty("name", out var nameProp) && nameProp.ValueKind == JsonValueKind.String)
+                    {
+                        name = nameProp.GetString()!;
+                    }
+                    else
+                    {
+                        var first = el.TryGetProperty("firstName", out var f) && f.ValueKind == JsonValueKind.String ? f.GetString() : null;
+                        var last = el.TryGetProperty("lastName", out var l) && l.ValueKind == JsonValueKind.String ? l.GetString() : null;
+                        name = string.Join(' ', new[] { first, last }.Where(x => !string.IsNullOrWhiteSpace(x)));
+                    }
+
+                    return (Id: id, Name: name ?? string.Empty);
+                })
+                .Where(p => !string.IsNullOrWhiteSpace(p.Name))
+                .ToList();
+
+            results.AddRange(people);
+
+            // Check if there's a next page
+            if (doc.RootElement.TryGetProperty("hasNextPage", out var nextPageProp) && nextPageProp.GetBoolean())
+            {
+                page++;
+            }
+            else
+            {
+                hasNextPage = false;
+            }
+        }
+
+        return results;
     }
 
     // Returns a sequence of (Id, Name) tuples for albums
