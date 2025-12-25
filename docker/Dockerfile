@@ -13,7 +13,7 @@ COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 # Set sensible defaults; can be overridden in compose or docker run
-ENV SYNC_CRON="0 * * * *" \
+ENV SYNC_CRON="0 2 * * *" \
 	SYNC_ARGS=""
 
 ENTRYPOINT ["/entrypoint.sh"]

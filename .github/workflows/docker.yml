@@ -37,17 +37,41 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch
-            type=ref,event=tag
-            type=sha
-          flavor: |
-            latest=true
+      - name: Compute image tags
+        id: tags
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
+          REF_TYPE="${{ github.ref_type }}"   # branch or tag
+          REF_NAME="${{ github.ref_name }}"
+          SHA="${{ github.sha }}"
+
+          TAGS=()
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            # PRs: build only, no push; still build with sha tag for cache
+            TAGS+=("${IMAGE}:${SHA}")
+          elif [[ "$REF_TYPE" == "tag" ]]; then
+            # Tags (e.g., v1.2.3): tag with ref and latest
+            TAGS+=("${IMAGE}:${REF_NAME}")
+            TAGS+=("${IMAGE}:latest")
+          elif [[ "$REF_NAME" == "main" || "$REF_NAME" == "master" ]]; then
+            # Main/master: latest + sha
+            TAGS+=("${IMAGE}:latest")
+            TAGS+=("${IMAGE}:${SHA}")
+          elif [[ "$REF_NAME" == "develop" ]]; then
+            # Develop: beta + develop + sha
+            TAGS+=("${IMAGE}:beta")
+            TAGS+=("${IMAGE}:develop")
+            TAGS+=("${IMAGE}:${SHA}")
+          else
+            # Other branches: branch name + sha
+            safe_branch=$(echo "$REF_NAME" | tr '/' '-')
+            TAGS+=("${IMAGE}:${safe_branch}")
+            TAGS+=("${IMAGE}:${SHA}")
+          fi
+
+          printf "tags=%s\n" "$(IFS=, ; echo "${TAGS[*]}")" >> "$GITHUB_OUTPUT"
 
       - name: Build and push
         uses: docker/build-push-action@v6
@@ -56,5 +80,4 @@ jobs:
           file: docker/Dockerfile
           platforms: linux/amd64
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.tags.outputs.tags }}
