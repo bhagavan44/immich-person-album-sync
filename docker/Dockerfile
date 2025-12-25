@@ -9,7 +9,7 @@ FROM mcr.microsoft.com/dotnet/runtime-deps:10.0-alpine
 WORKDIR /app
 COPY --from=builder /app .
 COPY AlbumSync/appsettings.json /app/appsettings.json
-COPY entrypoint.sh /entrypoint.sh
+COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 # Set sensible defaults; can be overridden in compose or docker run
