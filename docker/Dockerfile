@@ -1,5 +1,12 @@
+# Build stage
+FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS builder
+WORKDIR /build
+COPY AlbumSync/ .
+RUN dotnet publish -c Release -o /app
+
+# Runtime stage
 FROM mcr.microsoft.com/dotnet/runtime-deps:10.0-alpine
 WORKDIR /app
-COPY immich-album-sync /app/
+COPY --from=builder /app .
 COPY appsettings.json /app/
-CMD ["/app/immich-album-sync"]
+CMD ["/app/ImmichAlbumSync"]
