@@ -47,15 +47,13 @@ public class ImmichClient(HttpClient http)
     public async Task<List<PersonAsset>> SearchByPersonIds(IEnumerable<string> personIds)
     {
         var results = new List<PersonAsset>();
-        string page = "1";
+        string? page = "1";
 
-        while (true)
+        while (!string.IsNullOrEmpty(page))
         {
             var payload = JsonSerializer.Serialize(new { personIds = personIds.ToList(), page });
-            var url = "/api/search/metadata";
-
             var res = await http.PostAsync(
-                url,
+                "/api/search/metadata",
                 new StringContent(payload, Encoding.UTF8, "application/json")
             );
             res.EnsureSuccessStatusCode();
@@ -76,15 +74,11 @@ public class ImmichClient(HttpClient http)
 
             results.AddRange(items);
 
-            if (assetsElement.TryGetProperty("nextPage", out var nextPageProp) &&
-                nextPageProp.ValueKind == JsonValueKind.String)
-            {
-                page = nextPageProp.GetString();
-            }
-            else
-            {
-                break;
-            }
+            var nextPage = assetsElement.TryGetProperty("nextPage", out var nextPageProp) && nextPageProp.ValueKind == JsonValueKind.String
+                ? nextPageProp.GetString()
+                : null;
+
+            page = nextPage;
         }
 
         return results;

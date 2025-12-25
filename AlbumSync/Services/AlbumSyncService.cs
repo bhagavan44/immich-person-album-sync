@@ -26,7 +26,7 @@ public class AlbumSyncService(
             if (missing.Count == 0)
             {
                 logger.LogInformation("✔ Album already up to date");
-                return;
+                continue;
             }
 
             if (options.DryRun)
@@ -35,7 +35,7 @@ public class AlbumSyncService(
                     "[DRY-RUN] Would add {Count} assets",
                     missing.Count
                 );
-                return;
+                continue;
             }
 
             foreach (var batch in missing.Chunk(options.BatchSize))

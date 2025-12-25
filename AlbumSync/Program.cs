@@ -20,6 +20,14 @@ var logger = loggerFactory.CreateLogger("ImmichAlbumSync");
 
 var settings = config.Get<Settings>()!;
 
+// Command-line overrides
+var dryRunArg = args.Contains("--dry-run");
+if (dryRunArg)
+{
+    settings.Options.DryRun = true;
+    Console.WriteLine("Running in dry-run mode (command line override)");
+}
+
 // Support command-line options to list people/albums
 var listPeople = args.Contains("--list-people");
 var listAlbums = args.Contains("--list-albums");
