@@ -24,14 +24,23 @@ public class ImmichClient(HttpClient http)
         return new ImmichClient(client);
     }
 
-    public async Task<HashSet<string>> GetPersonAssets(string personId)
+    public async Task<List<PersonAsset>> GetPersonAssets(
+    string personId,
+    double minConfidence)
     {
         var json = await http.GetStringAsync($"/api/people/{personId}/assets");
         using var doc = JsonDocument.Parse(json);
-        return doc.RootElement.EnumerateArray()
-            .Select(x => x.GetProperty("id").GetString()!)
-            .ToHashSet();
+
+        return doc.RootElement
+            .EnumerateArray()
+            .Select(x => new PersonAsset(
+                AssetId: x.GetProperty("id").GetString()!,
+                Confidence: x.GetProperty("confidence").GetDouble()
+            ))
+            .Where(x => x.Confidence >= minConfidence)
+            .ToList();
     }
+
 
     public async Task<HashSet<string>> GetAlbumAssets(string albumId)
     {

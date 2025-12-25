@@ -12,23 +12,34 @@ public class AlbumSyncService(
     {
         foreach (var rule in rules)
         {
-            logger.LogInformation("▶ {Rule}", rule.Name);
+            logger.LogInformation("▶ {Rule} (confidence ≥ {Confidence})", rule.Name, rule.MinConfidence);
 
-            var personAssets = await client.GetPersonAssets(rule.PersonId);
+            var personAssets = await client.GetPersonAssets(
+                rule.PersonId,
+                rule.MinConfidence
+            );
+
             var albumAssets = await client.GetAlbumAssets(rule.AlbumId);
 
-            var missing = personAssets.Except(albumAssets).ToList();
+            var missing = personAssets
+                .Select(x => x.AssetId)
+                .Except(albumAssets)
+                .ToList();
 
-            if (!missing.Any())
+            if (missing.Count == 0)
             {
                 logger.LogInformation("✔ Album already up to date");
-                continue;
+                return;
             }
 
             if (options.DryRun)
             {
-                logger.LogWarning("[DRY-RUN] Would add {Count} assets", missing.Count);
-                continue;
+                logger.LogWarning(
+                    "[DRY-RUN] Would add {Count} assets (confidence ≥ {Confidence})",
+                    missing.Count,
+                    rule.MinConfidence
+                );
+                return;
             }
 
             foreach (var batch in missing.Chunk(options.BatchSize))
