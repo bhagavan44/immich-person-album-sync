@@ -90,6 +90,27 @@ docker compose -f docker/docker-compose.yml up -d
 docker logs -f immich-album-sync
 ```
 
+### Scheduled Runs (Cron)
+
+The Docker image includes a cron scheduler. Configure via environment variables:
+
+- SYNC_CRON: Cron expression (default: `0 * * * *` → hourly)
+- SYNC_ARGS: Additional CLI args (e.g., `--dry-run`, `--list-all`)
+
+Example compose service:
+
+```yaml
+services:
+  immich-album-sync:
+    image: immich-album-sync
+    environment:
+      SYNC_CRON: "0 2 * * *" # run daily at 02:00
+      SYNC_ARGS: "--dry-run" # optional arguments
+    volumes:
+      - ../appsettings.json:/app/appsettings.json:ro
+    restart: unless-stopped
+```
+
 ### Option 3: Self-Contained Executable
 
 **Publish as a single-file executable:**

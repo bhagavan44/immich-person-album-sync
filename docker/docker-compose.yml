@@ -6,4 +6,9 @@ services:
     container_name: immich-album-sync
     volumes:
       - ../appsettings.json:/app/appsettings.json:ro
+    environment:
+      # Run every day at 02:00 (example). Override as needed.
+      SYNC_CRON: "0 2 * * *"
+      # Pass extra CLI args like --dry-run or --list-all
+      SYNC_ARGS: "--dry-run"
     restart: unless-stopped
