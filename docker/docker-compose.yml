@@ -10,5 +10,5 @@ services:
       # Run every day at 02:00 (example). Override as needed.
       SYNC_CRON: "0 2 * * *"
       # Pass extra CLI args like --dry-run or --list-all
-      SYNC_ARGS: "--dry-run"
+      SYNC_ARGS: ""
     restart: unless-stopped
