@@ -24,24 +24,6 @@ public class ImmichClient(HttpClient http)
         return new ImmichClient(client);
     }
 
-    public async Task<List<PersonAsset>> GetPersonAssets(
-    string personId,
-    double minConfidence)
-    {
-        var json = await http.GetStringAsync($"/api/people/{personId}/assets");
-        using var doc = JsonDocument.Parse(json);
-
-        return doc.RootElement
-            .EnumerateArray()
-            .Select(x => new PersonAsset(
-                AssetId: x.GetProperty("id").GetString()!,
-                Confidence: x.GetProperty("confidence").GetDouble()
-            ))
-            .Where(x => x.Confidence >= minConfidence)
-            .ToList();
-    }
-
-
     public async Task<HashSet<string>> GetAlbumAssets(string albumId)
     {
         var json = await http.GetStringAsync($"/api/albums/{albumId}");
@@ -60,6 +42,52 @@ public class ImmichClient(HttpClient http)
             new StringContent(payload, Encoding.UTF8, "application/json")
         );
         res.EnsureSuccessStatusCode();
+    }
+
+    public async Task<List<PersonAsset>> SearchByPersonIds(IEnumerable<string> personIds)
+    {
+        var results = new List<PersonAsset>();
+        string page = "1";
+
+        while (true)
+        {
+            var payload = JsonSerializer.Serialize(new { personIds = personIds.ToList(), page });
+            var url = "/api/search/metadata";
+
+            var res = await http.PostAsync(
+                url,
+                new StringContent(payload, Encoding.UTF8, "application/json")
+            );
+            res.EnsureSuccessStatusCode();
+
+            var json = await res.Content.ReadAsStringAsync();
+            using var doc = JsonDocument.Parse(json);
+
+            var assetsElement = doc.RootElement.GetProperty("assets");
+
+            var items = assetsElement
+                .GetProperty("items")
+                .EnumerateArray()
+                .Select(x => new PersonAsset(
+                    AssetId: x.GetProperty("id").GetString()!,
+                    Confidence: 1.0 // Search results are already filtered
+                ))
+                .ToList();
+
+            results.AddRange(items);
+
+            if (assetsElement.TryGetProperty("nextPage", out var nextPageProp) &&
+                nextPageProp.ValueKind == JsonValueKind.String)
+            {
+                page = nextPageProp.GetString();
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        return results;
     }
 
     // Returns a sequence of (Id, Name) tuples for people

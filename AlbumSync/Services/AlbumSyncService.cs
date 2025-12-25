@@ -12,12 +12,9 @@ public class AlbumSyncService(
     {
         foreach (var rule in rules)
         {
-            logger.LogInformation("▶ {Rule} (confidence ≥ {Confidence})", rule.Name, rule.MinConfidence);
+            logger.LogInformation("▶ {Rule}", rule.Name);
 
-            var personAssets = await client.GetPersonAssets(
-                rule.PersonId,
-                rule.MinConfidence
-            );
+            var personAssets = await client.SearchByPersonIds(new[] { rule.PersonId });
 
             var albumAssets = await client.GetAlbumAssets(rule.AlbumId);
 
@@ -35,9 +32,8 @@ public class AlbumSyncService(
             if (options.DryRun)
             {
                 logger.LogWarning(
-                    "[DRY-RUN] Would add {Count} assets (confidence ≥ {Confidence})",
-                    missing.Count,
-                    rule.MinConfidence
+                    "[DRY-RUN] Would add {Count} assets",
+                    missing.Count
                 );
                 return;
             }
